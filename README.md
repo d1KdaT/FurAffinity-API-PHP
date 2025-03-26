@@ -9,29 +9,13 @@ Provides functionality for reading submissions, checking user activity, toggling
 
 ## 📦 Installation
 
-This package is not yet available on Packagist, but you can install it via GitHub using Composer:
-
-### 1. Add the repository to your project’s `composer.json`:
-
-```json
-{
-  "repositories": [
-    {
-      "type": "vcs",
-      "url": "https://github.com/d1KdaT/FurAffinity-API-PHP"
-    }
-  ],
-  "require": {
-    "d1kdat/furaffinity-api-php": "dev-main"
-  }
-}
-```
-
-### 2. Install with Composer:
+You can install the library via Composer:
 
 ```bash
-composer install
+composer require d1kdat/furaffinity-api-php
 ```
+
+This will automatically pull the latest version from [Packagist](https://packagist.org/packages/d1kdat/furaffinity-api-php) and configure autoloading.
 
 ---
 
