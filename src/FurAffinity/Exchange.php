@@ -1,0 +1,447 @@
+<?php
+
+/*
+ * FurAffinity API PHP
+ *
+ * PHP version 8.4.5
+ *
+ * @package		FurAffinity-API-PHP
+ * @author		d1KdaT <i@d1kdat.me>
+ * @version		2.1
+ * @license		MIT License
+ * @link		https://github.com/d1KdaT/FurAffinity-API-PHP
+*/
+
+namespace FurAffinity;
+
+use FurAffinity\Exception\BadRespond;
+use FurAffinity\Exception\TimeOut;
+
+class Exchange
+{
+	/**
+	 * The root URL for all FurAffinity requests.
+	 */
+	public const BASE_URL = 'https://www.furaffinity.net';
+
+	/**
+	 * Default User-Agent string used in cURL requests.
+	 */
+	private const DEFAULT_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36';
+
+	/**
+	 * The FurAffinity username used for the current session.
+	 */
+	private readonly string $username;
+
+	/**
+	 * Formatted cookie string for authenticated requests.
+	 */
+	private readonly string $cookies;
+
+	/**
+	 * Optional proxy address in the format "IP:PORT" for cURL requests.
+	 */
+	private readonly string|null $proxy;
+
+	/*
+	 * Create an object with the user's cookies: "a", "b" and "__cfduid" (optional) from FurAffinity
+	 *
+	 * @param array $settings — must contain either:
+	 *        ['username', 'b', 'a'] or ['d1', 'd2', 'd3', 'd4'],
+	 *        optionally 'proxy' => "IP:PORT" for cURL
+	 *
+	 * @throw \RuntimeException - cURL is not installed
+	 * @throw \InvalidArgumentException - lost one or more of the parameters
+	 */
+	public function __construct(array $settings)
+	{
+		if(!function_exists('curl_init'))
+		{
+			throw new \RuntimeException("cURL is needed, see: https://curl.se/docs/install.html");
+		}
+
+		$this->validateSettings($settings);
+
+		$this->username = $settings['username'] ?? $settings['d1'];
+
+		$cookie = [
+			'__cfduid' => $settings['__cfduid'] ?? $settings['d2'] ?? null,
+			'b'        => $settings['b']        ?? $settings['d3'],
+			'a'        => $settings['a']        ?? $settings['d4']
+		];
+
+		$cookie = array_filter($cookie, fn($v) => $v !== null);
+		$cookieParts = array_map(
+			fn($k, $v) => "$k=$v",
+			array_keys($cookie),
+			$cookie
+		);
+
+		$this->cookies = implode("; ", $cookieParts);
+
+		$this->proxy = $settings['proxy'] ?? null;
+	}
+
+	/**
+	 * Validates that the settings array contains either:
+	 * - ['username', 'b', 'a']
+	 *   or
+	 * - ['d1', 'd2', 'd3', 'd4']
+	 *
+	 * @param array $settings Associative array of settings used for authentication
+	 *
+	 * @throws \InvalidArgumentException If neither set of required keys is present
+	 */
+	private function validateSettings(array $settings): void
+	{
+		if (
+			!empty(array_diff(['username', 'b', 'a'], array_keys($settings))) &&
+			!empty(array_diff(['d1', 'd2', 'd3', 'd4'], array_keys($settings)))
+		) {
+			throw new \InvalidArgumentException('Missing required authentication keys (username+b+a or d1–d4).');
+		}
+	}
+
+	/**
+	 * Fetches basic information about a submission by its ID.
+	 *
+	 * Parses the page to extract:
+	 * - Direct file URL
+	 * - Username (from file path)
+	 * - Title and display name
+	 *
+	 * @param int|string $id Submission ID
+	 *
+	 * @return array{
+	 *     file: string,
+	 *     username: string,
+	 *     title: string,
+	 *     display_name: string
+	 * }|false Returns associative array of data if found, or false on failure
+	 *
+	 * @throws TimeOut
+	 * @throws BadRespond
+	 */
+	public function getById(int|string $id): array|false
+	{
+		$return = [];
+		$response = $this->curl(self::BASE_URL . "/view/$id/");
+
+		if ($match = Regex::DownloadLink->match($response))
+		{
+			$link = $match[1] ?? '';
+			if (str_starts_with($link, '//'))
+			{
+				$link = 'https:' . $link;
+			}
+
+			$return['file'] = $link;
+		}
+
+		if (!empty($return['file']) && ($match = Regex::UsernameFromLink->match($return['file'])))
+		{
+			$return['username'] = $match[1];
+		}
+
+		if (!empty($return['username']) && ($match = Regex::TitleAndAuthor->match($response)))
+		{
+			$return['title'] = $match[1];
+			$return['display_name'] = $match[2];
+		}
+
+		return $return ?: false;
+	}
+
+	/**
+	 * Retrieves the watchlist of a given user (users they are watching).
+	 *
+	 * Iterates through paginated results until the full list is fetched.
+	 *
+	 * @param string|null $username Target username. If null, defaults to the current session user.
+	 *
+	 * @return array<int, array{
+	 *     username: string,
+	 *     display_name: string
+	 * }>|false Returns list of users or false if watchlist is empty or failed
+	 *
+	 * @throws TimeOut
+	 * @throws BadRespond
+	 */
+	public function getWatchlist(?string $username = null): array|false
+	{
+		$i = 1;
+		$return = [];
+		$username = $username ?? $this->username;
+
+		while(true)
+		{
+			$response = $this->curl(self::BASE_URL . "/watchlist/by/$username/$i/");
+			$match = Regex::WatchList->match_all($response);
+
+			if (empty($match[1]))
+			{
+				break;
+			}
+
+			foreach($match[1] as $k => $v)
+			{
+				$return[] = [
+					"username" => $v,
+					"display_name" => $match[3][$k] ?? "undefined"
+				];
+			}
+
+			$i++;
+		}
+
+		return $return ?: false;
+	}
+
+	/**
+	 * Checks whether the given user exists on FurAffinity.
+	 *
+	 * @param string|null $username Username to check. If null, uses the current session username.
+	 *
+	 * @return bool True if user exists, false if not
+	 *
+	 * @throws TimeOut
+	 * @throws BadRespond
+	 */
+	public function checkUserExists(?string $username = null): bool
+	{
+		$username = $username ?? $this->username;
+		$response = $this->curl(self::BASE_URL . "/user/$username/");
+
+		return !Regex::UserNotFound->match($response);
+	}
+
+	/**
+	 * Verifies whether the current session is authenticated on FurAffinity.
+	 *
+	 * Checks if the response from the submission page contains a reference to the current username.
+	 *
+	 * @return bool True if logged in, false otherwise
+	 *
+	 * @throws TimeOut
+	 * @throws BadRespond
+	 */
+	public function checkLogIn(): bool
+	{
+		$response = $this->curl(self::BASE_URL . "/submit/");
+		$match = Regex::CheckLogIn->match($response);
+
+		return (($match[1] ?? '') === $this->username);
+	}
+
+	/**
+	 * Performs a toggle action (e.g., favorite/unfavorite or watch/unwatch) on a target entity.
+	 *
+	 * The method checks whether the current state allows performing the action,
+	 * constructs a signed request using the extracted key, and optionally confirms success via regex pattern.
+	 *
+	 * @param FavoriteType|WatchType                       $type The type of toggle action (fav/unfav or watch/unwatch)
+	 * @param string                                       $initialPath Path used to fetch the target page (e.g., "/view/", "/user/")
+	 * @param string|int                                   $target ID or username of the target
+	 * @param Regex|null                                   $confirmationPattern Optional pattern to validate successful response
+	 *
+	 * @return int Result code:
+	 *             1 = action performed,
+	 *             2 = already in target state,
+	 *             0 = failed to perform or detect
+	 *
+	 * @throws TimeOut
+	 * @throws BadRespond
+	 */
+	private function toggleGeneric(
+		FavoriteType|WatchType $type,
+		string $initialPath,
+		string|int $target,
+		?Regex $confirmationPattern = null
+	): int
+	{
+		$response = $this->curl(self::BASE_URL . $initialPath . $target . "/");
+
+		if ($match = Regex::match_key($response, $type->value, $target))
+		{
+			$key = $match[1];
+
+			$actionResponse = $this->curl(self::BASE_URL . "/{$type->value}/$target/?key=$key");
+			if (!$confirmationPattern || $confirmationPattern->match($actionResponse))
+			{
+				return 1;
+			}
+		}
+		
+		if (Regex::match_key($response, $type->inverse()->value, $target))
+		{
+			return 2;
+		}
+
+		return 0;
+	}
+
+	/**
+	 * Toggles the watch status for the given user.
+	 *
+	 * @param WatchType            $type Action to perform (watch or unwatch)
+	 * @param string               $username Target username
+	 *
+	 * @return int Result code:
+	 *             1 = action performed,
+	 *             2 = already in target state,
+	 *             0 = failed to perform or detect
+	 *
+	 * @throws TimeOut
+	 * @throws BadRespond
+	 */
+	public function toggleWatch(WatchType $type, string $username): int
+	{
+		return $this->toggleGeneric($type, "/user/", $username, Regex::WatchUnWatch);
+	}
+
+	/**
+	 * Toggles the favorite status of a submission by its ID.
+	 *
+	 * @param FavoriteType            $type Action to perform (fav or unfav)
+	 * @param int|string              $id   Submission ID
+	 *
+	 * @return int Result code:
+	 *             1 = action performed,
+	 *             2 = already in target state,
+	 *             0 = failed to perform or detect
+	 *
+	 * @throws TimeOut
+	 * @throws BadRespond
+	 */
+	public function toggleFavorite(FavoriteType $type, int|string $id): int
+	{
+		return $this->toggleGeneric($type, "/view/", $id);
+	}
+
+	/**
+	 * Removes selected submission messages via POST request.
+	 *
+	 * Uses presence of "New Submissions" block in the response as confirmation.
+	 *
+	 * @param array $ids Array of submission IDs to remove
+	 *
+	 * @return bool True if action was successful (response contained expected confirmation), false otherwise
+	 *
+	 * @throws TimeOut
+	 * @throws BadRespond
+	 */
+	public function removeMsgSubmissions(array $ids = []): bool
+	{
+		$postdata = [
+			"submissions" => $ids,
+			"messagecenter-action" => "remove_checked"
+		];
+
+		$response = $this->curl(self::BASE_URL . "/msg/submissions/", false, http_build_query($postdata));
+
+		return Regex::NewSubmissions->match($response) !== null;
+	}
+
+	/**
+	 * Retrieves IDs of new submission messages that are greater than the given last ID.
+	 *
+	 * Scans the "New Submissions" message center page and extracts all submission IDs,
+	 * filtering those that are newer than the provided ID.
+	 *
+	 * @param int|string $last_id The last known submission ID to compare against (default: 0)
+	 *
+	 * @return array<int> Array of sorted submission IDs greater than $last_id,
+	 *                         or empty array if no new submissions were found
+	 *
+	 * @throws TimeOut
+	 * @throws BadRespond
+	 */
+	public function getNewMsgSubmissions(int|string $last_id = 0): array
+	{
+		$last_id = (int) $last_id;
+		$submissions_ids = [];
+
+		$response = $this->curl(self::BASE_URL . "/msg/submissions/new@72/");
+		$match = Regex::NewMsgSubmissions->match_all($response);
+
+		foreach($match[1] ?? [] as $v)
+		{
+			$id = (int) $v;
+			if ($id > $last_id)
+			{
+				$submissions_ids[] = $id;
+			}
+		}
+
+		$submissions_ids = array_unique($submissions_ids);
+		sort($submissions_ids);
+
+		return $submissions_ids;
+	}
+
+	/**
+	 * Execute a cURL request to the given URL with optional POST data and proxy.
+	 *
+	 * @param string               $url       The full URL to request.
+	 * @param bool                 $header    Whether to include the response headers (default: false).
+	 * @param string|array|null    $postdata  Optional POST data to send with the request.
+	 *
+	 * @return string  The response body on success.
+	 *
+	 * @throws TimeOut       If the server did not respond within the timeout limit.
+	 * @throws BadRespond    If the response is blocked by Cloudflare or malformed.
+	 */
+	protected function curl(string $url, bool $header = false, string|array|null $postdata = null): string
+	{
+		$ch = curl_init();
+		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 6);
+		curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($ch, CURLOPT_HEADER, (($header) ? 1 : 0));
+		curl_setopt($ch, CURLOPT_URL, $url);
+
+		if ($this->proxy !== null)
+		{
+			$proxy = explode(":", $this->proxy);
+			if (count($proxy) === 2)
+			{
+				curl_setopt($ch, CURLOPT_PROXY, $proxy[0]);
+				curl_setopt($ch, CURLOPT_PROXYPORT, $proxy[1]);
+			}
+		}
+
+		if (isset($postdata))
+		{
+			curl_setopt($ch, CURLOPT_POST, true);
+			curl_setopt($ch, CURLOPT_POSTFIELDS, $postdata);
+		}
+
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+		curl_setopt($ch, CURLOPT_USERAGENT, self::DEFAULT_UA);
+		curl_setopt($ch, CURLOPT_COOKIE, $this->cookies);
+
+		$result = curl_exec($ch);
+		curl_close($ch);
+
+		if (!$result)
+		{
+			throw new TimeOut("The server didn't respond for a certain time");
+		}
+
+		if (Regex::Cloudflare->match($result) && Regex::CloudflareRayID->match($result))
+		{
+			throw new BadRespond("Cloudflare blocking site view");
+		}
+
+		if ($result && !Regex::FAName->match($result))
+		{
+			throw new BadRespond("The content is not loaded");
+		}
+
+		// fix for invalid utf-8 symbols
+		$result = iconv('UTF-8', 'UTF-8//IGNORE', $result);
+
+		return $result;
+	}
+}

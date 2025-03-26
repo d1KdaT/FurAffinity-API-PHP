@@ -1,0 +1,25 @@
+{
+    "name": "d1kdat/furaffinity-api-php",
+    "description": "FurAffinity scraper API in PHP",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "FurAffinity\\": "src/FurAffinity/"
+        }
+    },
+    "authors": [
+        {
+            "name": "d1KdaT",
+            "homepage": "https://github.com/d1KdaT",
+            "email": "i@d1kdat.me"
+        }
+    ],
+    "require": {
+        "php": ">=8.1",
+        "ext-curl": "*",
+        "ext-json": "*",
+        "ext-iconv": "*",
+        "ext-pcre": "*"
+    }
+}
