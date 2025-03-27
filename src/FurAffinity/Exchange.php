@@ -3,11 +3,8 @@
 /*
  * FurAffinity API PHP
  *
- * PHP version 8.4.5
- *
  * @package		FurAffinity-API-PHP
  * @author		d1KdaT <i@d1kdat.me>
- * @version		2.1.0
  * @license		MIT License
  * @link		https://github.com/d1KdaT/FurAffinity-API-PHP
 */
