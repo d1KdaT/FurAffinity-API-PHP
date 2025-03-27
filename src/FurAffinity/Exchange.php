@@ -429,6 +429,9 @@ class Exchange
 			throw new TimeOut("The server didn't respond for a certain time");
 		}
 
+		// fix for invalid utf-8 symbols
+		$result = iconv('UTF-8', 'UTF-8//IGNORE', $result);
+
 		if (Regex::Cloudflare->match($result) && Regex::CloudflareRayID->match($result))
 		{
 			throw new BadRespond("Cloudflare blocking site view");
@@ -438,9 +441,6 @@ class Exchange
 		{
 			throw new BadRespond("The content is not loaded");
 		}
-
-		// fix for invalid utf-8 symbols
-		$result = iconv('UTF-8', 'UTF-8//IGNORE', $result);
 
 		return $result;
 	}
