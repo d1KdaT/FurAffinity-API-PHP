@@ -16,11 +16,12 @@ enum Regex: string
 	case TitleAndAuthor    = '/<meta property="og:title" content="([^"]+) by ([^"]+)" \/>/ui';
 	case WatchUnWatch      = '/has been (added to|removed from) your watch list\!/ui';
 	case CheckLogIn        = '/href="\/user\/([^\/]+)\/"/ui';
-	case FAName            = '/(Fur Affinity|<title>System Error<\/title>)/ui';
+	case FAName            = '/(Fur Affinity|<title>System Error<\/title>|Crawl-delay)/ui';
 	case UserNotFound      = '/This user cannot be found\./ui';
 	case WatchList         = '/href="\/user\/([^\/]+)\/"[^>]+>(<span[^>]*>)*\s*([^<]+)\s*</ui';
 	case NewSubmissions    = '/New Submissions/ui';
 	case NewMsgSubmissions = '/href="\/view\/([0-9]+)\/"/ui';
+	case CrawlDelay        = '/Crawl-delay:\s*([0-9\.]+)/ui';
 
 	public function match(string $subject): ?array
 	{

@@ -54,6 +54,12 @@ class Exchange
 	 */
 	private readonly string|null $proxy;
 
+	/**
+	 * Number of seconds to wait after each request to respect crawling rules.
+	 * Defaults to 0 second. Must be updated based on Fur Affinity’s robots.txt on construct.
+	 */
+	private int $crawl_delay = 0;
+
 	/*
 	 * Create an object with the user's cookies: "a", "b" and "__cfduid" (optional) from FurAffinity
 	 *
@@ -91,6 +97,9 @@ class Exchange
 		$this->cookies = implode("; ", $cookieParts);
 
 		$this->proxy = $settings['proxy'] ?? null;
+
+		// set delay for requests
+		$this->loadCrawlDelayFromRobots();
 	}
 
 	/**
@@ -110,6 +119,24 @@ class Exchange
 			!empty(array_diff(['d1', 'd2', 'd3', 'd4'], array_keys($settings)))
 		) {
 			throw new \InvalidArgumentException('Missing required authentication keys (username+b+a or d1–d4).');
+		}
+	}
+
+	/**
+	 * Fetches and applies the Crawl-delay directive from robots.txt.
+	 * Ensures a minimum delay of 1 second between requests.
+	 *
+	 * @return void
+	 */
+	private function loadCrawlDelayFromRobots(): void
+	{
+		$response = $this->curl(self::BASE_URL . '/robots.txt');
+
+		// Match: Crawl-delay: 1 or Crawl-delay: 1.5 etc.
+		if ($match = Regex::CrawlDelay->match($response))
+		{
+			$delay = (float) $match[1];
+			$this->crawl_delay = max(1, (int) ceil($delay));
 		}
 	}
 
@@ -433,6 +460,12 @@ class Exchange
 
 		$result = curl_exec($ch);
 		curl_close($ch);
+
+		// wait before next request
+		if($this->crawl_delay > 0)
+		{
+			sleep($this->crawl_delay);
+		}
 
 		if (!$result)
 		{
