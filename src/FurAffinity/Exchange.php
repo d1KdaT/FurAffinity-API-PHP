@@ -254,6 +254,24 @@ class Exchange
 	}
 
 	/**
+	 * Checks if a given regular expression matches the HTML content of a user's profile page.
+	 *
+	 * @param string $regex The regular expression to test against the profile HTML.
+	 * @param string $username The username whose profile should be fetched.
+	 *
+	 * @return bool True if the pattern matches the profile page, false otherwise.
+	 *
+	 * @throws TimeOut        If the request times out.
+	 * @throws BadRespond     If the content is invalid or blocked.
+	 */
+	public function checkRegexOnUserProfile(string $regex, string $username): bool
+	{
+		$response = $this->curl(self::BASE_URL . "/user/$username/");
+
+		return preg_match($regex, $response);
+	}
+
+	/**
 	 * Verifies whether the current session is authenticated on FurAffinity.
 	 *
 	 * Checks if the response from the submission page contains a reference to the current username.
