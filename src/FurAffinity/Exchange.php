@@ -22,9 +22,22 @@ class Exchange
 	public const BASE_URL = 'https://www.furaffinity.net';
 
 	/**
-	 * Default User-Agent string used in cURL requests.
+	 * Current version of the FurAffinity API PHP library.
+	 * Used for identifying the library in the User-Agent string.
 	 */
-	private const DEFAULT_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36';
+	private const VERSION = '2.1';
+
+	/**
+	 * GitHub repository URL of the library.
+	 * Included in the User-Agent for transparency.
+	 */
+	private const GITHUB = 'https://github.com/d1KdaT/FurAffinity-API-PHP';
+
+	/**
+	 * Default User-Agent string used in cURL requests.
+	 * Format: FurAffinity-API-PHP/{VERSION} (PHP/{PHP_VERSION}; +{GITHUB})
+	 */
+	private const DEFAULT_UA = 'FurAffinity-API-PHP/' . self::VERSION . ' (PHP/' . PHP_VERSION . '; +' . self::GITHUB . ')';
 
 	/**
 	 * The FurAffinity username used for the current session.
