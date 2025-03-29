@@ -22,6 +22,7 @@ enum Regex: string
 	case NewSubmissions    = '/New Submissions/ui';
 	case NewMsgSubmissions = '/href="\/view\/([0-9]+)\/"/ui';
 	case CrawlDelay        = '/Crawl-delay:\s*([0-9\.]+)/ui';
+	case TargetBlocked     = '/someone who has blocked you/ui';
 
 	public function match(string $subject): ?array
 	{

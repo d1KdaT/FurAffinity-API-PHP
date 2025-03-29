@@ -285,6 +285,7 @@ class Exchange
 	 * @return int Result code:
 	 *             1 = action performed,
 	 *             2 = already in target state,
+	 *             3 = target blocked current session user,
 	 *             0 = failed to perform or detect
 	 *
 	 * @throws TimeOut
@@ -304,6 +305,12 @@ class Exchange
 			$key = $match[1];
 
 			$actionResponse = $this->curl(self::BASE_URL . "/{$type->value}/$target/?key=$key");
+
+			if (Regex::TargetBlocked->match($actionResponse))
+			{
+				return 3;
+			}
+
 			if (!$confirmationPattern || $confirmationPattern->match($actionResponse))
 			{
 				return 1;
@@ -327,6 +334,7 @@ class Exchange
 	 * @return int Result code:
 	 *             1 = action performed,
 	 *             2 = already in target state,
+	 *             3 = target blocked current session user,
 	 *             0 = failed to perform or detect
 	 *
 	 * @throws TimeOut
@@ -346,6 +354,7 @@ class Exchange
 	 * @return int Result code:
 	 *             1 = action performed,
 	 *             2 = already in target state,
+	 *             3 = target blocked current session user,
 	 *             0 = failed to perform or detect
 	 *
 	 * @throws TimeOut

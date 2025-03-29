@@ -21,6 +21,8 @@ try {
         echo "User '{$username}' has been added to your watchlist.\n";
     } elseif ($result === 2) {
         echo "User '{$username}' is already on your watchlist.\n";
+    } elseif ($result === 3) {
+        echo "User '{$username}' blocked '{$settings['username']}'.\n";
     } else {
         echo "Failed to add '{$username}' to your watchlist.\n";
     }

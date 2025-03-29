@@ -21,6 +21,8 @@ try {
         echo "Submission {$submissionId} has been added to your favorites.\n";
     } elseif ($result === 2) {
         echo "Submission {$submissionId} is already in your favorites.\n";
+    } elseif ($result === 3) {
+        echo "Owner of {$submissionId} blocked '{$settings['username']}'.\n";
     } else {
         echo "Failed to add submission {$submissionId} to favorites.\n";
     }
