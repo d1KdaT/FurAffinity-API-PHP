@@ -414,6 +414,7 @@ class Exchange
 	 * filtering those that are newer than the provided ID.
 	 *
 	 * @param int|string $last_id The last known submission ID to compare against (default: 0)
+	 * @param string     $sort    Type of sort - old/new (default: new)
 	 *
 	 * @return array<int> Array of sorted submission IDs greater than $last_id,
 	 *                         or empty array if no new submissions were found
@@ -421,12 +422,12 @@ class Exchange
 	 * @throws TimeOut
 	 * @throws BadRespond
 	 */
-	public function getNewMsgSubmissions(int|string $last_id = 0): array
+	public function getNewMsgSubmissions(int|string $last_id = 0, string $sort = 'new'): array
 	{
 		$last_id = (int) $last_id;
 		$submissions_ids = [];
 
-		$response = $this->curl(self::BASE_URL . "/msg/submissions/new@72/");
+		$response = $this->curl(self::BASE_URL . "/msg/submissions/$sort@72/");
 		$match = Regex::NewMsgSubmissions->match_all($response);
 
 		foreach($match[1] ?? [] as $v)
