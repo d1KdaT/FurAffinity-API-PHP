@@ -23,6 +23,8 @@ try {
         echo "User '{$username}' is already on your watchlist.\n";
     } elseif ($result === 3) {
         echo "User '{$username}' blocked '{$settings['username']}'.\n";
+    } elseif ($result === 4) {
+        echo "User '{$username}' has been permanently suspended.\n";
     } else {
         echo "Failed to add '{$username}' to your watchlist.\n";
     }

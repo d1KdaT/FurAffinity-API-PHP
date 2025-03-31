@@ -304,6 +304,7 @@ class Exchange
 	 *             1 = action performed,
 	 *             2 = already in target state,
 	 *             3 = target blocked current session user,
+	 *             4 = target has been permanently suspended (only for WatchType::Watch),
 	 *             0 = failed to perform or detect
 	 *
 	 * @throws TimeOut
@@ -323,6 +324,11 @@ class Exchange
 			$key = $match[1];
 
 			$actionResponse = $this->curl(self::BASE_URL . "/{$type->value}/$target/?key=$key");
+
+			if (Regex::TargetSuspended->match($actionResponse))
+			{
+				return 4;
+			}
 
 			if (Regex::TargetBlocked->match($actionResponse))
 			{
@@ -353,6 +359,7 @@ class Exchange
 	 *             1 = action performed,
 	 *             2 = already in target state,
 	 *             3 = target blocked current session user,
+	 *             4 = target has been permanently suspended (only for WatchType::Watch),
 	 *             0 = failed to perform or detect
 	 *
 	 * @throws TimeOut
@@ -460,8 +467,8 @@ class Exchange
 	protected function curl(string $url, bool $header = false, string|array|null $postdata = null): string
 	{
 		$ch = curl_init();
-		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 6);
-		curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 20);
+		curl_setopt($ch, CURLOPT_TIMEOUT, 40);
 		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
 		curl_setopt($ch, CURLOPT_HEADER, (($header) ? 1 : 0));
 		curl_setopt($ch, CURLOPT_URL, $url);
