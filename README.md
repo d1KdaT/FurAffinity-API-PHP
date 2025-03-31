@@ -1,5 +1,10 @@
 # FurAffinity API (Unofficial PHP Parser)
 
+[![GitHub release](https://img.shields.io/github/v/release/d1kdat/furaffinity-api-php.svg?style=flat-square)](https://packagist.org/packages/d1kdat/furaffinity-api-php)
+[![Supported PHP Version](https://img.shields.io/packagist/dependency-v/d1kdat/furaffinity-api-php/php.svg?style=flat-square)](README.md)
+[![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE)
+[![Packagist](https://img.shields.io/packagist/dt/d1kdat/furaffinity-api-php.svg?style=flat-square)](https://packagist.org/packages/d1kdat/furaffinity-api-php)
+
 A lightweight and modern PHP library for interacting with FurAffinity through HTML parsing.  
 Provides functionality for reading submissions, checking user activity, toggling favorites/watches, and working with the message center.
 
@@ -25,7 +30,6 @@ This will automatically pull the latest version from [Packagist](https://packagi
 - PHP extensions:
   - `curl`
   - `iconv`
-  - `json`
   - `pcre`
 
 ---
