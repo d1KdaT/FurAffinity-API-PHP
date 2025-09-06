@@ -210,13 +210,24 @@ class Exchange
 		$i = 1;
 		$return = [];
 		$username = $username ?? $this->username;
+		$fallback_break = false;
 
 		while(true)
 		{
-			$response = $this->curl(self::BASE_URL . "/watchlist/by/$username/$i/");
+			$response = $this->curl(self::BASE_URL . "/watchlist/by/$username/?page=$i");
 			$match = Regex::WatchList->match_all($response);
 
-			if (empty($match[1]))
+			if (count($return) > 0 && !in_array($return[count($return) - 1]["username"], $match[1]))
+			{
+				$fallback_break = false;
+			}
+
+			if (empty($match[1]) || (count($return) > 0 && in_array($return[count($return) - 1]["username"], $match[1])))
+			{
+				$fallback_break = true;
+			}
+
+			if ($fallback_break)
 			{
 				break;
 			}
