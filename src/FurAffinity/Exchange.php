@@ -155,6 +155,8 @@ class Exchange
 	 *     username: string,
 	 *     title: string,
 	 *     display_name: string
+	 *     rating: string
+	 *     rating_short: string
 	 * }|false Returns associative array of data if found, or false on failure
 	 *
 	 * @throws TimeOut
@@ -185,6 +187,21 @@ class Exchange
 		{
 			$return['title'] = $match[1];
 			$return['display_name'] = $match[2];
+		}
+
+		if (!empty($return['display_name']) && ($match = Regex::SubmissionRating->match($response)))
+		{
+			if(preg_match("/(general|mature|adult)/ui", $match[1] ?? "", $rating_match))
+			{
+				$submissions_rating = mb_strtolower($rating_match[1] ?? "");
+				$return['rating'] = $submissions_rating;
+				$return['rating_short'] = mb_substr($submissions_rating, 0, 1);
+			}
+			else
+			{
+				$return['rating'] = "unknown";
+				$return['rating_short'] = "u";
+			}
 		}
 
 		return $return ?: false;

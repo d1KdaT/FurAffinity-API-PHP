@@ -9,21 +9,22 @@ namespace FurAffinity;
  */
 enum Regex: string
 {
-	case Cloudflare        = '/DDoS protection by Cloudflare/ui';
-	case CloudflareRayID   = '/Ray ID\:/ui';
-	case DownloadLink      = '/<a href="([^"]+)">Download<\/a>/ui';
-	case UsernameFromLink  = '/\/art\/([^\/]+)\/([0-9]+)\//ui';
-	case TitleAndAuthor    = '/<meta property="og:title" content="([^"]+) by ([^"]+)" \/>/ui';
-	case WatchUnWatch      = '/has been (added to|removed from) your watch list\!/ui';
-	case CheckLogIn        = '/href="\/user\/([^\/]+)\/"/ui';
-	case FAName            = '/(Fur Affinity|<title>System Error<\/title>|Crawl-delay)/ui';
-	case UserNotFound      = '/This user cannot be found\./ui';
-	case WatchList         = '/href="\/user\/([^\/]+)\/"[^>]+>(<span[^>]*>)*\s*([^<]+)\s*</ui';
-	case NewSubmissions    = '/New Submissions/ui';
-	case NewMsgSubmissions = '/href="\/view\/([0-9]+)\/"/ui';
-	case CrawlDelay        = '/Crawl-delay:\s*([0-9\.]+)/ui';
-	case TargetBlocked     = '/someone who has blocked you/ui';
-	case TargetSuspended   = '/has been permanently suspended/ui';
+	case Cloudflare         = '/DDoS protection by Cloudflare/ui';
+	case CloudflareRayID    = '/Ray ID\:/ui';
+	case DownloadLink       = '/<a href="([^"]+)">Download<\/a>/ui';
+	case UsernameFromLink   = '/\/art\/([^\/]+)\/([0-9]+)\//ui';
+	case TitleAndAuthor     = '/<meta property="og:title" content="([^"]+) by ([^"]+)" \/>/ui';
+	case WatchUnWatch       = '/has been (added to|removed from) your watch list\!/ui';
+	case CheckLogIn         = '/href="\/user\/([^\/]+)\/"/ui';
+	case FAName             = '/(Fur Affinity|<title>System Error<\/title>|Crawl-delay)/ui';
+	case UserNotFound       = '/This user cannot be found\./ui';
+	case WatchList          = '/href="\/user\/([^\/]+)\/"[^>]+>(<span[^>]*>)*\s*([^<]+)\s*</ui';
+	case NewSubmissions     = '/New Submissions/ui';
+	case NewMsgSubmissions  = '/href="\/view\/([0-9]+)\/"/ui';
+	case CrawlDelay         = '/Crawl-delay:\s*([0-9\.]+)/ui';
+	case TargetBlocked      = '/someone who has blocked you/ui';
+	case TargetSuspended    = '/has been permanently suspended/ui';
+	case SubmissionRating   = '/<meta name="twitter:data2" content="([^"]+)" \/>/ui';
 
 	public function match(string $subject): ?array
 	{
