@@ -55,6 +55,11 @@ class Exchange
 	private readonly string|null $proxy;
 
 	/**
+	 * Optional change of BASE_URL for cURL requests.
+	 */
+	private readonly string $baseUrl;
+
+	/**
 	 * Number of seconds to wait after each request to respect crawling rules.
 	 * Defaults to 0 second. Must be updated based on Fur Affinity’s robots.txt on construct.
 	 */
@@ -98,6 +103,8 @@ class Exchange
 
 		$this->proxy = $settings['proxy'] ?? null;
 
+		$this->baseUrl = rtrim(($settings['base_url'] ?? '') ?: self::BASE_URL, '/');
+
 		// set delay for requests
 		$this->loadCrawlDelayFromRobots();
 	}
@@ -130,7 +137,7 @@ class Exchange
 	 */
 	private function loadCrawlDelayFromRobots(): void
 	{
-		$response = $this->curl(self::BASE_URL . '/robots.txt');
+		$response = $this->curl($this->baseUrl . '/robots.txt');
 
 		// Match: Crawl-delay: 1 or Crawl-delay: 1.5 etc.
 		if ($match = Regex::CrawlDelay->match($response))
@@ -165,7 +172,7 @@ class Exchange
 	public function getById(int|string $id): array|false
 	{
 		$return = [];
-		$response = $this->curl(self::BASE_URL . "/view/$id/");
+		$response = $this->curl($this->baseUrl . "/view/$id/");
 
 		if ($match = Regex::DownloadLink->match($response))
 		{
@@ -231,7 +238,7 @@ class Exchange
 
 		while(true)
 		{
-			$response = $this->curl(self::BASE_URL . "/watchlist/by/$username/?page=$i");
+			$response = $this->curl($this->baseUrl . "/watchlist/by/$username/?page=$i");
 			$match = Regex::WatchList->match_all($response);
 
 			if (count($return) > 0 && !in_array($return[count($return) - 1]["username"], $match[1]))
@@ -276,7 +283,7 @@ class Exchange
 	public function checkUserExists(?string $username = null): bool
 	{
 		$username = $username ?? $this->username;
-		$response = $this->curl(self::BASE_URL . "/user/$username/");
+		$response = $this->curl($this->baseUrl . "/user/$username/");
 
 		return !Regex::UserNotFound->match($response);
 	}
@@ -294,7 +301,7 @@ class Exchange
 	 */
 	public function checkRegexOnUserProfile(string $regex, string $username): bool
 	{
-		$response = $this->curl(self::BASE_URL . "/user/$username/");
+		$response = $this->curl($this->baseUrl . "/user/$username/");
 
 		return preg_match($regex, $response);
 	}
@@ -311,7 +318,7 @@ class Exchange
 	 */
 	public function checkLogIn(): bool
 	{
-		$response = $this->curl(self::BASE_URL . "/submit/");
+		$response = $this->curl($this->baseUrl . "/submit/");
 		$match = Regex::CheckLogIn->match($response);
 
 		return (($match[1] ?? '') === $this->username);
@@ -345,13 +352,13 @@ class Exchange
 		?Regex $confirmationPattern = null
 	): int
 	{
-		$response = $this->curl(self::BASE_URL . $initialPath . $target . "/");
+		$response = $this->curl($this->baseUrl . $initialPath . $target . "/");
 
 		if ($match = Regex::match_key($response, $type->value, $target))
 		{
 			$key = $match[1];
 
-			$actionResponse = $this->curl(self::BASE_URL . "/{$type->value}/$target/?key=$key");
+			$actionResponse = $this->curl($this->baseUrl . "/{$type->value}/$target/?key=$key");
 
 			if (Regex::TargetSuspended->match($actionResponse))
 			{
@@ -437,7 +444,7 @@ class Exchange
 			"messagecenter-action" => "remove_checked"
 		];
 
-		$response = $this->curl(self::BASE_URL . "/msg/submissions/", false, http_build_query($postdata));
+		$response = $this->curl($this->baseUrl . "/msg/submissions/", false, http_build_query($postdata));
 
 		return Regex::NewSubmissions->match($response) !== null;
 	}
@@ -462,7 +469,7 @@ class Exchange
 		$last_id = (int) $last_id;
 		$submissions_ids = [];
 
-		$response = $this->curl(self::BASE_URL . "/msg/submissions/$sort@72/");
+		$response = $this->curl($this->baseUrl . "/msg/submissions/$sort@72/");
 		$match = Regex::NewMsgSubmissions->match_all($response);
 
 		foreach($match[1] ?? [] as $v)
