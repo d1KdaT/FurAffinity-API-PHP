@@ -192,8 +192,8 @@ class Exchange
 
 		if (!empty($return['username']) && ($match = Regex::TitleAndAuthor->match($response)))
 		{
-			$return['title'] = $match[1];
-			$return['display_name'] = $match[2];
+			$return['title'] = $this->decodeHtmlEntitiesDeep($match[1]);
+			$return['display_name'] = $this->decodeHtmlEntitiesDeep($match[2]);
 		}
 
 		if (!empty($return['display_name']) && ($match = Regex::SubmissionRating->match($response)))
@@ -556,5 +556,26 @@ class Exchange
 		}
 
 		return $result;
+	}
+
+	/**
+	 * Decode HTML entities in a string, including cases with multiple levels of encoding.
+	 *
+	 * This method repeatedly applies html_entity_decode() until the string
+	 * stops changing, ensuring proper decoding when entities are double-encoded
+	 * (e.g., "&amp;quot;" → "&quot;" → '"').
+	 *
+	 * @param string $s  The input string containing HTML entities.
+	 *
+	 * @return string  The fully decoded, human-readable string.
+	 */
+	protected function decodeHtmlEntitiesDeep(string $s): string
+	{
+		$prev = null;
+		while ($prev !== $s) {
+			$prev = $s;
+			$s = html_entity_decode($s, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+		}
+		return $s;
 	}
 }
