@@ -11,7 +11,7 @@ enum Regex: string
 {
 	case Cloudflare         = '/DDoS protection by Cloudflare/ui';
 	case CloudflareRayID    = '/Ray ID\:/ui';
-	case DownloadLink       = '/<a href="([^"]+)">Download<\/a>/ui';
+	case DownloadLink       = '/<a[^>]*href="([^"]+)"[^>]*>Download<\/a>/ui';
 	case UsernameFromLink   = '/\/art\/([^\/]+)\/([0-9]+)\//ui';
 	case TitleAndAuthor     = '/<meta property="og:title" content="([^"]+) by ([^"]+)" \/>/ui';
 	case WatchUnWatch       = '/has been (added to|removed from) your watch list\!/ui';
