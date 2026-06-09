@@ -86,11 +86,22 @@ class Exchange
 
 		$this->username = $settings['username'] ?? $settings['d1'];
 
-		$cookie = [
+		$this->user_agent = $settings['user_agent'] ?? self::DEFAULT_UA;
+
+		$extra_cookies = [];
+
+		foreach (explode(';', $settings['extra_cookies'] ?? '') as $extra_cookie) {
+			[$name, $value] = array_map('trim', explode('=', $extra_cookie, 2));
+			$extra_cookies[$name] = $value;
+		}
+
+		$user_cookies = [
 			'__cfduid' => $settings['__cfduid'] ?? $settings['d2'] ?? null,
 			'b'        => $settings['b']        ?? $settings['d3'],
 			'a'        => $settings['a']        ?? $settings['d4']
 		];
+
+		$cookie = array_merge($extra_cookies, $user_cookies);
 
 		$cookie = array_filter($cookie, fn($v) => $v !== null);
 		$cookieParts = array_map(
@@ -106,7 +117,14 @@ class Exchange
 		$this->baseUrl = rtrim(($settings['base_url'] ?? '') ?: self::BASE_URL, '/');
 
 		// set delay for requests
-		$this->loadCrawlDelayFromRobots();
+		if (isset($settings['crawl_delay']))
+		{
+			$this->crawl_delay = max(1, (int) ceil($settings['crawl_delay']));
+		}
+		else
+		{
+			$this->loadCrawlDelayFromRobots();
+		}
 	}
 
 	/**
@@ -525,7 +543,7 @@ class Exchange
 		}
 
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-		curl_setopt($ch, CURLOPT_USERAGENT, self::DEFAULT_UA);
+		curl_setopt($ch, CURLOPT_USERAGENT, $this->user_agent);
 		curl_setopt($ch, CURLOPT_COOKIE, $this->cookies);
 
 		$result = curl_exec($ch);
