@@ -45,6 +45,11 @@ class Exchange
 	private readonly string $username;
 
 	/**
+	 * The FurAffinity User-Agent string used in cURL requests
+	 */
+	private readonly string $user_agent;
+
+	/**
 	 * Formatted cookie string for authenticated requests.
 	 */
 	private readonly string $cookies;
