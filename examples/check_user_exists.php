@@ -11,7 +11,7 @@ require_once __DIR__ . '/../vendor/autoload.php';
 use FurAffinity\Exchange;
 
 // Replace with the username you want to check
-$usernameToCheck = 'falvie';
+$usernameToCheck = 'cepto';
 
 try {
     $fa = new Exchange($settings);

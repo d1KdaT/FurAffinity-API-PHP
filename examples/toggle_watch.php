@@ -11,7 +11,7 @@ require_once __DIR__ . '/../vendor/autoload.php';
 use FurAffinity\Exchange;
 use FurAffinity\WatchType;
 
-$username = 'falvie'; // The user you want to watch
+$username = 'cepto'; // The user you want to watch
 
 try {
     $fa = new Exchange($settings);

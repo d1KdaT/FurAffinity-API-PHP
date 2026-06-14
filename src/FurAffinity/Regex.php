@@ -25,6 +25,7 @@ enum Regex: string
 	case TargetBlocked      = '/someone who has blocked you/ui';
 	case TargetSuspended    = '/has been permanently suspended/ui';
 	case SubmissionRating   = '/<meta name="twitter:data2" content="([^"]+)" \/>/ui';
+	case SubmissionTags     = '/data-tag-name="([^"]+)"/ui';
 
 	public function match(string $subject): ?array
 	{

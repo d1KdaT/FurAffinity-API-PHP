@@ -10,7 +10,7 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 use FurAffinity\Exchange;
 
-$username = "falvie"; // if calls getWatchlist() - return watchlist of session user
+$username = "cepto"; // if calls getWatchlist() - return watchlist of session user
 
 try {
     $fa = new Exchange($settings);
@@ -21,7 +21,7 @@ try {
     } else {
         echo "Watchlist:\n";
         foreach ($watchlist as $entry) {
-            echo "{$entry['display_name']} (~{$entry['username']})\n";
+            echo "{$entry['display_name']} (~{$entry['username']}) [{$entry['user_tag']}]\n";
         }
     }
 } catch (Throwable $e) {

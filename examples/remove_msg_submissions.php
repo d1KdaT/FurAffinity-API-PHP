@@ -10,7 +10,7 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 use FurAffinity\Exchange;
 
-$submissionIds = [22872063, 12345678]; // Replace with real submission IDs from your message center
+$submissionIds = [60800395, 12345678]; // Replace with real submission IDs from your message center
 
 try {
     $fa = new Exchange($settings);

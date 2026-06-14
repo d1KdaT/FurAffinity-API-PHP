@@ -234,6 +234,28 @@ class Exchange
 			}
 		}
 
+
+		if (!empty($return['display_name']))
+		{
+			if ($match = Regex::SubmissionTags->match_all($response))
+			{
+				$return['tags'] = array_unique($match[1]);
+
+				$user_tag = $this->usernameToTag($return['username']);
+
+				if (in_array($user_tag, $return['tags']))
+				{
+					$return['user_tag'] = $user_tag;
+				}
+			}
+			else
+			{
+				$return['tags'] = [];
+			}
+
+			ksort($return, SORT_STRING);
+		}
+
 		return $return ?: false;
 	}
 
@@ -283,6 +305,7 @@ class Exchange
 			{
 				$return[] = [
 					"username" => $v,
+					"user_tag" => $this->usernameToTag($v),
 					"display_name" => $match[3][$k] ?? "undefined"
 				];
 			}
@@ -345,6 +368,21 @@ class Exchange
 		$match = Regex::CheckLogIn->match($response);
 
 		return (($match[1] ?? '') === $this->username);
+	}
+
+	/**
+	 * Generate user tag from given username
+	 *
+	 * @param string $username Username
+	 *
+	 * @return string user tag
+	 *
+	 * @throws TimeOut
+	 * @throws BadRespond
+	 */
+	private function usernameToTag(string $username): string
+	{
+		return "u_" . preg_replace(['/\s+/', '/~/', '/\./'], ['_', '_', '_'], urldecode($username));
 	}
 
 	/**
